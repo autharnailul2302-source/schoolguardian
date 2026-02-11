@@ -298,6 +298,14 @@
             100% { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
         }
         
+        @keyframes comboPop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.5) rotate(-5deg); opacity: 1; }
+            40% { transform: translate(-50%, -50%) scale(1.0) rotate(5deg); }
+            60% { transform: translate(-50%, -50%) scale(1.1) rotate(-3deg); }
+            100% { transform: translate(-50%, -50%) scale(1.0) rotate(0); opacity: 1; }
+        }
+        
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); }
             10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -313,6 +321,24 @@
         }
         
         .shake-screen { animation: shake 0.5s; }
+
+        /* Floating Tutorial Text */
+        .tutorial-float {
+            position: absolute;
+            transform: translateX(-50%);
+            color: #fbbf24;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 100;
+            animation: bounceSmall 1s infinite;
+        }
+        @keyframes bounceSmall {
+            0%, 100% { transform: translate(-50%, 0); }
+            50% { transform: translate(-50%, -10px); }
+        }
     </style>
 </head>
 <body class="bg-gray-900 w-full h-screen select-none overflow-hidden m-0 p-0">
@@ -332,6 +358,13 @@
         
         <!-- UI: DAMAGE OVERLAY -->
         <div id="damage-overlay" class="absolute inset-0 bg-red-600 pointer-events-none z-[45] opacity-0 transition-opacity duration-100 mix-blend-overlay"></div>
+
+        <!-- UI: COMBO OVERLAY -->
+        <div id="combo-overlay" class="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[65] flex flex-col items-center hidden">
+            <h1 id="combo-text" class="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-red-500 via-orange-500 to-yellow-500 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] ml-font tracking-widest text-center" style="text-shadow: 0 0 20px rgba(255,0,0,0.8); -webkit-text-stroke: 2px white;">
+                DOUBLE KILL
+            </h1>
+        </div>
 
         <!-- UI: MOBA ANNOUNCEMENT OVERLAY -->
         <div id="announcement-overlay" class="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[60] flex flex-col items-center hidden">
@@ -467,6 +500,9 @@
                     WASD: Gerak | KLIK: Tembak
                 </div>
             </div>
+            
+            <!-- Tutorial Float Text Container -->
+            <div id="tutorial-text" class="tutorial-float hidden top-1/2 left-1/2"></div>
         </div>
 
         <!-- UI: PROLOGUE (STORY) -->
@@ -496,14 +532,14 @@
 
         <!-- UI: TUTORIAL -->
         <div id="ui-tutorial" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-50 hidden backdrop-blur-sm cursor-pointer" onclick="endTutorial()">
-            <h2 class="text-3xl text-yellow-400 mb-8 ml-font">MISI PERTAHANAN</h2>
+            <h2 class="text-3xl text-yellow-400 mb-8 ml-font">PELATIHAN DASAR</h2>
             <div class="flex flex-col md:flex-row gap-8 items-center justify-center w-full max-w-4xl px-4">
                 <div class="glass-panel p-6 text-center w-full md:w-1/2">
                     <i class="fas fa-map text-4xl text-green-400 mb-4"></i>
                     <h3 class="text-xl font-bold mb-2">PETA SEKOLAH</h3>
                     <p class="text-gray-300">
-                        Lindungi <span class="text-blue-400">RUANG ICT</span> (Tower Pusat).<br>
-                        Gunakan gedung sebagai pelindung (bisa dilewati di belakangnya).
+                        Anda akan masuk ke mode simulasi.
+                        <br>Buktikan kemampuan navigasi dan menembak anda!
                     </p>
                 </div>
                 <div class="glass-panel p-6 text-center w-full md:w-1/2">
@@ -512,7 +548,7 @@
                     <p class="text-gray-300">HP: Analog Kiri, Tap Kanan.<br>PC: WASD & Mouse.</p>
                 </div>
             </div>
-            <div class="mt-12 text-gray-400 animate-pulse text-sm">Ketuk layar untuk mulai...</div>
+            <div class="mt-12 text-gray-400 animate-pulse text-sm">Ketuk layar untuk memulai pelatihan...</div>
         </div>
 
         <!-- UI: QUIZ MODAL -->
@@ -590,6 +626,10 @@
             ctx: null,
             bgm: null,
             gameplay: null,
+            victory: null, // Tambahan untuk musik victory
+            welcome: null, // Tambahan untuk welcome sound
+            warning: null, // Tambahan untuk Enemy Approaching
+            sounds: {}, // Container for SFX
             init: function() {
                 window.AudioContext = window.AudioContext || window.webkitAudioContext;
                 if(!this.ctx) this.ctx = new AudioContext();
@@ -605,17 +645,58 @@
                     this.gameplay.loop = true;
                     this.gameplay.volume = 0.4;
                 }
+                // Inisialisasi musik Victory
+                if (!this.victory) {
+                    this.victory = new Audio('audio/victory.mp3');
+                    this.victory.loop = true;
+                    this.victory.volume = 0.5;
+                }
+                // Inisialisasi Welcome Sound
+                if (!this.welcome) {
+                    this.welcome = new Audio('audio/welcome.mp3');
+                    this.welcome.volume = 1.0; // Volume maksimal agar terdengar jelas
+                }
+                // Inisialisasi Warning Sound (Enemy Approaching)
+                if (!this.warning) {
+                    this.warning = new Audio('audio/peringatanmusuhdatang.mp3');
+                    this.warning.volume = 1.0; 
+                }
+
+                // SFX Loading
+                const sfxFiles = {
+                    'shoot': 'audio/shoot.mp3',
+                    'hit': 'audio/hit.mp3',
+                    'skill1': 'audio/skill1.mp3', 
+                    'skill2': 'audio/skill2.mp3',
+                    'slain': 'audio/enemy_slain.mp3', // Generic legacy
+                    'double': 'audio/double_kill.mp3',
+                    'triple': 'audio/triple_kill.mp3',
+                    'maniac': 'audio/maniac.mp3',
+                    'savage': 'audio/savage.mp3',
+                    'legendary': 'audio/legendary.mp3',
+                    'defeat': 'audio/defeat.mp3',
+                    // BARU: Suara Kill Spesifik
+                    'you_slain': 'audio/youhaveslainenemy.mp3',
+                    'enemy_slain_announce': 'audio/enemyhasbeslain.mp3'
+                };
+
+                for (const [key, path] of Object.entries(sfxFiles)) {
+                    this.sounds[key] = new Audio(path);
+                }
             },
             playMusic: function(type) {
                 // Stop all first
                 if (this.bgm) { this.bgm.pause(); this.bgm.currentTime = 0; }
                 if (this.gameplay) { this.gameplay.pause(); this.gameplay.currentTime = 0; }
+                if (this.victory) { this.victory.pause(); this.victory.currentTime = 0; }
 
                 // Play selected
                 if (type === 'bgm' && this.bgm) {
                     this.bgm.play().catch(e => console.log("Audio play failed:", e));
                 } else if (type === 'gameplay' && this.gameplay) {
                     this.gameplay.play().catch(e => console.log("Audio play failed:", e));
+                } else if (type === 'victory' && this.victory) {
+                    this.victory.play().catch(e => console.log("Audio play failed:", e));
                 }
             },
             playTone: function(freq, type, duration, vol = 0.1) {
@@ -631,32 +712,119 @@
                 osc.start();
                 osc.stop(this.ctx.currentTime + duration);
             },
-            shoot: function() { this.playTone(400, 'square', 0.1, 0.05); },
-            hit: function() { this.playTone(100, 'sawtooth', 0.1, 0.05); },
-            skill: function() { this.playTone(800, 'sine', 0.5, 0.1); },
+            playSFX: function(name) {
+                if (this.sounds[name]) {
+                    // Clone node allows overlapping sounds (e.g. rapid fire)
+                    const s = this.sounds[name].cloneNode();
+                    s.volume = 0.6;
+                    s.play().catch(e => {
+                        // Fallback to synth if file fails or browser blocks
+                        if(name === 'shoot') this.playTone(400, 'square', 0.1, 0.05);
+                        else if(name === 'hit') this.playTone(100, 'sawtooth', 0.1, 0.05);
+                    });
+                } else {
+                    // Fallback generic tones if specific sound not mapped or loaded
+                    if(name === 'shoot') this.playTone(400, 'square', 0.1, 0.05);
+                    else if(name === 'hit') this.playTone(100, 'sawtooth', 0.1, 0.05);
+                }
+            },
+            shoot: function() { this.playSFX('shoot'); },
+            hit: function() { this.playSFX('hit'); },
+            skill: function() { this.playSFX('skill1'); },
             powerup: function() { this.playTone(600, 'sine', 0.1, 0.1); setTimeout(() => this.playTone(900, 'sine', 0.2, 0.1), 100); },
             correct: function() { this.playTone(1000, 'sine', 0.1, 0.1); },
             wrong: function() { this.playTone(200, 'sawtooth', 0.3, 0.1); },
-            gameOver: function() { this.playTone(100, 'sawtooth', 1.0, 0.2); },
+            gameOver: function() { 
+                this.playTone(100, 'sawtooth', 1.0, 0.2); 
+                this.playSFX('defeat');
+            },
             slain: function() {
-                // Suara "Enemy Slain" (Impact berat)
-                this.playTone(150, 'sawtooth', 0.1, 0.2);
-                setTimeout(() => this.playTone(100, 'square', 0.3, 0.3), 50);
+                this.playSFX('slain');
+            },
+            // BARU: Method untuk audio spesifik
+            youSlain: function() {
+                this.playSFX('you_slain');
+            },
+            enemySlain: function() {
+                this.playSFX('enemy_slain_announce');
             },
             bossSlain: function() {
-                // Suara "Legendary" (Lebih epik & panjang)
-                this.playTone(100, 'sawtooth', 0.5, 0.4);
-                setTimeout(() => this.playTone(80, 'square', 0.5, 0.4), 100);
-                setTimeout(() => this.playTone(60, 'sine', 1.0, 0.5), 300);
+                this.playSFX('legendary'); // Boss kill sounds epic
+            },
+            playWelcome: function() {
+                if (this.welcome) {
+                    this.welcome.currentTime = 0;
+                    this.welcome.play().catch(e => console.log("Welcome sound failed:", e));
+                }
+            },
+            playWarning: function() {
+                if (this.warning) {
+                    this.warning.currentTime = 0;
+                    this.warning.play().catch(e => console.log("Warning sound failed:", e));
+                }
+            },
+            // Added UI click sound
+            uiClick: function() {
+                // Short high pitch beep for UI interaction
+                this.playTone(1200, 'sine', 0.05, 0.05);
             }
         };
 
+        // Add global click listener for UI sounds
+        document.addEventListener('click', (e) => {
+            // Check if element is clickable (button, input, or specific classes)
+            if (e.target.tagName === 'BUTTON' || 
+                e.target.closest('button') || 
+                e.target.classList.contains('char-card') ||
+                e.target.classList.contains('quiz-option')) {
+                
+                // Initialize if not ready (for the very first click)
+                if (!AudioSys.ctx) AudioSys.init();
+                if (AudioSys.ctx && AudioSys.ctx.state === 'suspended') AudioSys.ctx.resume();
+                
+                AudioSys.uiClick();
+            }
+        });
+
         // --- SPLASH & INIT ---
-        function initExperience() {
+        
+        // Helper untuk memaksa mode landscape dan fullscreen
+        async function enforceLandscape() {
+            const elem = document.documentElement;
+            
+            // 1. Request Fullscreen (jika belum)
+            try {
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    if (elem.requestFullscreen) {
+                        await elem.requestFullscreen();
+                    } else if (elem.webkitRequestFullscreen) { /* Safari */
+                        await elem.webkitRequestFullscreen();
+                    } else if (elem.msRequestFullscreen) { /* IE11 */
+                        await elem.msRequestFullscreen();
+                    }
+                }
+            } catch (err) {
+                // console.log("Fullscreen request failed (likely need gesture):", err);
+            }
+
+            // 2. Lock Orientation to Landscape
+            if (screen.orientation && screen.orientation.lock) {
+                try {
+                    await screen.orientation.lock("landscape").catch(err => {
+                        // console.warn("Orientation lock failed:", err)
+                    });
+                } catch (e) {
+                    // console.warn("Orientation lock error:", e);
+                }
+            }
+        }
+
+        async function initExperience() {
             AudioSys.init();
             AudioSys.playMusic('bgm');
-            const elem = document.documentElement;
-            if (elem.requestFullscreen) elem.requestFullscreen().catch(err => console.log(err));
+            
+            // Panggil fungsi enforce landscape
+            await enforceLandscape();
 
             document.getElementById('ui-start').classList.add('hidden');
             const splash = document.getElementById('ui-splash');
@@ -670,6 +838,39 @@
                 }, 1000); 
             }, 2500); 
         }
+
+        // Listener untuk menangani interupsi (telepon, keluar aplikasi)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                // Saat kembali ke aplikasi, coba restore landscape/fullscreen
+                enforceLandscape();
+                
+                // Resume musik jika sedang dalam game atau lobby
+                if(AudioSys.bgm && AudioSys.bgm.paused && gameState === 'LOBBY') {
+                    AudioSys.bgm.play().catch(e=>console.log(e));
+                }
+                if(AudioSys.gameplay && AudioSys.gameplay.paused && gameState === 'PLAYING') {
+                    AudioSys.gameplay.play().catch(e=>console.log(e));
+                }
+                if(AudioSys.victory && AudioSys.victory.paused && (gameState === 'GAMEOVER' || !document.getElementById('ui-leaderboard').classList.contains('hidden'))) {
+                    AudioSys.victory.play().catch(e=>console.log(e));
+                }
+            } else {
+               // Pause musik saat aplikasi di background
+               if(AudioSys.bgm) AudioSys.bgm.pause();
+               if(AudioSys.gameplay) AudioSys.gameplay.pause();
+               if(AudioSys.victory) AudioSys.victory.pause();
+            }
+        });
+
+        // Tambahan: Restore fullscreen pada setiap sentuhan di canvas jika terlepas
+        const canvasEl = document.getElementById('gameCanvas');
+        canvasEl.addEventListener('touchstart', (e) => {
+            // Cek jika belum fullscreen, paksa lagi (browser butuh user gesture)
+            if (!document.fullscreenElement) {
+                enforceLandscape();
+            }
+        }, {passive: true}); // passive true agar tidak blocking scroll default jika ada
 
         function startLoadingAssets() {
             const titleScreen = document.getElementById('ui-title');
@@ -723,6 +924,15 @@
         let difficultyMultiplier = 1;
         let activePowerUp = null;
         let storyIndex = 0;
+
+        // Tutorial Variables
+        let tutorialStep = 0; // 0: None, 1: Move, 2: Shoot, 3: Complete
+        let hasMoved = false;
+
+        // Combo Logic Variables
+        let comboCount = 0;
+        let comboTimer = 0;
+        let streakCount = 0; // Kills without dying
 
         let player;
         let bullets = [];
@@ -794,15 +1004,18 @@
 
             const isMobile = W < 768; 
             
+            // Adjusted parameters for wider movement area
             let gap, padding, baseSize;
 
             if (isMobile) {
-                gap = 20;       
-                padding = 5;    
+                // Increased gap significantly for mobile
+                gap = 55;       
+                padding = 15;    
                 baseSize = 60;  
             } else {
-                gap = 50;       
-                padding = 30;   
+                // Increased gap significantly for desktop
+                gap = 110;       
+                padding = 40;   
                 baseSize = 100; 
             }
             
@@ -898,11 +1111,6 @@
                 ctx.fillStyle = '#1e293b'; 
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
-
-            // 2. Jalan (Lanes)
-            ctx.fillStyle = 'rgba(51, 65, 85, 0.6)'; 
-            ctx.fillRect(schoolBase.x - 20, 0, schoolBase.w + 40, canvas.height); 
-            ctx.fillRect(0, schoolBase.y - 20, canvas.width, schoolBase.h + 40); 
             
             // 3. Base Ground Decal (Lingkaran Glow)
             ctx.save();
@@ -917,8 +1125,6 @@
 
         // Helper untuk menggambar obstacle tunggal
         function drawObstacle(obs) {
-            // Bayangan (Shadow) dihapus agar tampilan lebih bersih
-            
             ctx.save();
             const hasImage = obs.img && obs.img.complete && obs.img.naturalWidth !== 0;
 
@@ -952,19 +1158,6 @@
                 }
             }
             ctx.restore(); 
-            
-            // Debug Hitbox (Uncomment to see collision box)
-            /*
-            if(obs.hitbox) {
-                ctx.strokeStyle = 'red'; ctx.lineWidth = 1;
-                ctx.strokeRect(
-                    obs.x + obs.w * obs.hitbox.x, 
-                    obs.y + obs.h * obs.hitbox.y, 
-                    obs.w * obs.hitbox.w, 
-                    obs.h * obs.hitbox.h
-                );
-            }
-            */
         }
         
         function drawBaseTower() {
@@ -1042,17 +1235,9 @@
                     ctx.strokeStyle = '#FCD34D'; ctx.lineWidth = 2; ctx.stroke();
                 }
 
-                // DRAW CHARACTER (FULL BODY - NO CIRCLE CLIP)
                 const img = (playerGender === 'male') ? charBoyImg : charGirlImg;
                 
                 if(img.complete && img.naturalWidth !== 0) {
-                    // Draw full image centered, slightly larger than collision circle to show body
-                    // Assuming sprite needs to be drawn upright relative to rotation or top-down
-                    // Since it's a 2.5D view, usually sprites don't rotate with the gun aim, only the gun/arms do.
-                    // But for simplicity in this code structure, we are rotating the whole context.
-                    // To make it look like "full body standing", we might want to rotate it back -90 degrees if the image is standing up.
-                    // However, let's stick to standard top-down rotation for now, just removing the clip.
-                    
                     ctx.drawImage(img, -this.radius, -this.radius, this.radius*2, this.radius*2);
                 } else {
                     // Fallback to circle if image missing
@@ -1085,6 +1270,13 @@
                 if (joystick.active) {
                     moveX = joystick.valX * this.speed;
                     moveY = joystick.valY * this.speed;
+                }
+
+                // Check movement for tutorial
+                if (gameState === 'TUTORIAL_STAGE' && tutorialStep === 1) {
+                    if (Math.abs(moveX) > 0.1 || Math.abs(moveY) > 0.1) {
+                        hasMoved = true;
+                    }
                 }
 
                 this.x += moveX;
@@ -1138,13 +1330,17 @@
         }
 
         class Enemy {
-            constructor(type = 'normal') {
+            constructor(type = 'normal', x, y) {
                 this.type = type;
-                const spawnSide = Math.floor(Math.random() * 4);
-                if (spawnSide === 0) { this.x = canvas.width/2; this.y = -30; } 
-                else if (spawnSide === 1) { this.x = canvas.width/2; this.y = canvas.height + 30; } 
-                else if (spawnSide === 2) { this.x = -30; this.y = canvas.height/2; } 
-                else { this.x = canvas.width + 30; this.y = canvas.height/2; } 
+                if (x !== undefined && y !== undefined) {
+                    this.x = x; this.y = y;
+                } else {
+                    const spawnSide = Math.floor(Math.random() * 4);
+                    if (spawnSide === 0) { this.x = canvas.width/2; this.y = -30; } 
+                    else if (spawnSide === 1) { this.x = canvas.width/2; this.y = canvas.height + 30; } 
+                    else if (spawnSide === 2) { this.x = -30; this.y = canvas.height/2; } 
+                    else { this.x = canvas.width + 30; this.y = canvas.height/2; } 
+                }
 
                 if (type === 'elite') {
                     this.radius = 25; // Adjusted size for Elite
@@ -1200,6 +1396,9 @@
                 }
             }
             update() {
+                // If in tutorial, dummy enemy doesn't move or moves very slowly
+                if (gameState === 'TUTORIAL_STAGE') return;
+
                 const angle = Math.atan2(player.y - this.y, player.x - this.x);
                 let vx = Math.cos(angle) * this.speed;
                 let vy = Math.sin(angle) * this.speed;
@@ -1332,9 +1531,33 @@
             document.getElementById('ui-tutorial').classList.add('hidden');
             document.getElementById('ui-hud').classList.remove('hidden');
             
-            gameState = 'PLAYING';
-            initGame();
+            // Masuk ke Mode Tutorial Stage dulu (bukan langsung main)
+            startTutorialStage();
+            AudioSys.playWelcome();
+        }
+        
+        function startTutorialStage() {
+            gameState = 'TUTORIAL_STAGE';
+            tutorialStep = 1; // Start with moving
+            hasMoved = false;
+            
+            document.getElementById('wave-display').innerText = "LATIHAN";
+            
+            initGame(); // Init game objects
             animate();
+        }
+        
+        function showTutorialText(text) {
+            const el = document.getElementById('tutorial-text');
+            el.innerText = text;
+            el.classList.remove('hidden');
+            
+            // Position near player (simplified to center screen offset for now or specific UI area)
+            // Ideally this updates in loop, but CSS centering works for generic overlay
+        }
+        
+        function hideTutorialText() {
+             document.getElementById('tutorial-text').classList.add('hidden');
         }
 
         let lastWaveForElites = 0; 
@@ -1347,12 +1570,21 @@
             lastWaveForElites = 0; 
             skills[1].cooldown=0; skills[2].cooldown=0;
             
+            // Reset Stats
+            comboCount = 0;
+            streakCount = 0;
+            
             document.getElementById('score-display').innerText = 0;
             document.getElementById('hp-bar').style.width = '100%';
-            document.getElementById('wave-display').innerText = "WAVE 1";
+            
+            if (gameState === 'PLAYING') {
+                document.getElementById('wave-display').innerText = "WAVE 1";
+            }
         }
 
         function spawnEntities() {
+            if (gameState === 'TUTORIAL_STAGE') return; // Don't spawn normal enemies in tutorial
+
             const currentWave = Math.floor(difficultyMultiplier);
 
             if (frames % Math.max(30, 100 - (difficultyMultiplier * 5)) === 0) {
@@ -1413,6 +1645,53 @@
             }, 150);
         }
 
+        // --- COMBO SYSTEM ---
+        function checkCombo(count) {
+            let text = "";
+            let sub = "";
+            let soundKey = "";
+            
+            // Combo Kill (Cepat)
+            if (count === 2) { text = "DOUBLE KILL"; soundKey = 'double'; }
+            else if (count === 3) { text = "TRIPLE KILL"; soundKey = 'triple'; }
+            else if (count === 4) { text = "MANIAC"; soundKey = 'maniac'; }
+            else if (count >= 5) { text = "SAVAGE"; soundKey = 'savage'; }
+
+            if (text) {
+                showComboText(text);
+                if (soundKey) AudioSys.playSFX(soundKey);
+            }
+        }
+
+        function checkStreak(count) {
+            let text = "";
+            if (count === 3) text = "KILLING SPREE";
+            else if (count === 5) text = "RAMPAGE";
+            else if (count === 7) text = "UNSTOPPABLE";
+            else if (count === 9) text = "GODLIKE";
+            else if (count === 12) { text = "LEGENDARY"; AudioSys.playSFX('legendary'); }
+
+            if (text && count !== 12) showKillAnnouncement(text, `STREAK ${count}`, false); // Legendary has special sound
+            else if (count === 12) showKillAnnouncement(text, `STREAK ${count}`, false);
+        }
+
+        function showComboText(text) {
+            const container = document.getElementById('combo-overlay');
+            const title = document.getElementById('combo-text');
+            
+            title.innerText = text;
+            container.classList.remove('hidden');
+            
+            // Reset anim
+            title.style.animation = 'none';
+            title.offsetHeight; 
+            title.style.animation = 'comboPop 0.5s ease-out forwards';
+
+            setTimeout(() => {
+                container.classList.add('hidden');
+            }, 1500);
+        }
+
         function showKillAnnouncement(text, subText, isBoss = false) {
             const container = document.getElementById('announcement-overlay');
             const title = document.getElementById('announcement-text');
@@ -1435,17 +1714,63 @@
                 document.body.classList.add('shake-screen'); 
                 setTimeout(() => document.body.classList.remove('shake-screen'), 500);
             } else {
-                AudioSys.slain();
+                AudioSys.enemySlain(); // Menggunakan suara 'Enemy Has Been Slain'
             }
 
             setTimeout(() => {
                 container.classList.add('hidden');
             }, 2500);
         }
+        
+        function updateTutorialLogic() {
+            if (gameState !== 'TUTORIAL_STAGE') return;
+            
+            const textEl = document.getElementById('tutorial-text');
+            
+            // Step 1: Moving
+            if (tutorialStep === 1) {
+                textEl.innerHTML = '<i class="fas fa-arrows-alt"></i> GERAKKAN KARAKTER<br><span class="text-sm text-gray-300">Gunakan WASD atau Analog Kiri</span>';
+                textEl.classList.remove('hidden');
+                
+                // Position text above player
+                // Using simplified CSS centering for now, but logical update could be here
+                
+                if (hasMoved) {
+                    setTimeout(() => {
+                        tutorialStep = 2;
+                        // Spawn dummy enemy near player but slightly away
+                        const dummyX = player.x > canvas.width/2 ? player.x - 150 : player.x + 150;
+                        const dummyY = player.y;
+                        enemies.push(new Enemy('normal', dummyX, dummyY));
+                    }, 1000);
+                }
+            } 
+            // Step 2: Shooting
+            else if (tutorialStep === 2) {
+                textEl.innerHTML = '<i class="fas fa-crosshairs"></i> MUSUH TERDETEKSI!<br><span class="text-sm text-gray-300">Klik / Tap Kanan untuk Menembak</span>';
+                
+                if (enemies.length === 0) {
+                     // Enemy killed
+                     tutorialStep = 3;
+                     textEl.innerHTML = '<i class="fas fa-check text-green-400"></i> BAGUS! SIAP BERTEMPUR';
+                     
+                     setTimeout(() => {
+                         hideTutorialText();
+                         gameState = 'PLAYING';
+                         initGame(); // Reset for real game
+                         AudioSys.playMusic('gameplay');
+                         AudioSys.playWarning(); // Mainkan suara Peringatan Musuh Datang
+                         showKillAnnouncement("BATTLE START", "LINDUNGI SERVER!");
+                     }, 2000);
+                }
+            }
+        }
 
         function animate() {
             requestAnimationFrame(animate);
-            if (gameState !== 'PLAYING') return;
+            // Allow animation loop in Tutorial Stage as well
+            if (gameState !== 'PLAYING' && gameState !== 'TUTORIAL_STAGE') return;
+            
             frames++;
             
             // 1. Draw Environment (Tanah Datar)
@@ -1454,12 +1779,19 @@
             // 2. Logic Updates
             player.update();
             spawnEntities();
+            
+            // Tutorial Logic Update
+            updateTutorialLogic();
+
+            // Combo Timer Logic
+            if(comboCount > 0) {
+                comboTimer--;
+                if(comboTimer <= 0) comboCount = 0;
+            }
 
             // Bullet Logic
             bullets.forEach((b, i) => {
                 b.update(); 
-                // Draw bullet logic nanti di render list jika mau depth, tapi peluru biasanya di atas semua
-                // Kita akan gambar peluru di loop terpisah atau di atas semua
                 if(b.life<=0) setTimeout(()=>bullets.splice(i,1),0);
                 
                 enemies.forEach((e, ei) => {
@@ -1472,9 +1804,22 @@
                         
                         if (e.hp <= 0) {
                             score += e.value;
-                            document.getElementById('score-display').innerText = score;
+                            if (gameState === 'PLAYING') document.getElementById('score-display').innerText = score;
+                            
+                            // COMBO & STREAK LOGIC
+                            // Play 'You Have Slain' only if no combo is active (to avoid overlap noise)
+                            if (comboCount === 0) AudioSys.youSlain();
+
+                            comboCount++;
+                            comboTimer = 180; // 3 detik @ 60fps
+                            streakCount++;
+                            
+                            checkCombo(comboCount);
+                            checkStreak(streakCount);
+
                             if (e.type === 'elite') showKillAnnouncement("ELITE SLAIN", `BONUS +${e.value} POINTS`);
                             else if (e.type === 'boss') showKillAnnouncement("LEGENDARY", `BOSS DEFEATED +${e.value}`, true);
+                            
                             enemies.splice(ei, 1);
                         }
                     }
@@ -1483,16 +1828,22 @@
 
             enemies.forEach((e, i) => {
                 e.update(); 
-                // e.draw() dipindah ke render list
                 
                 const dist = Math.hypot(e.x - player.x, e.y - player.y);
                 if (dist < e.radius + player.radius) {
                     if (activePowerUp === 'SHIELD') {
-                        enemies.splice(i, 1); AudioSys.hit();
+                        enemies.splice(i, 1); 
+                        AudioSys.hit();
+                        // Optional: Play enemy slain sound for shield kills
+                        AudioSys.enemySlain(); 
                     } else {
-                        let damage = 10;
-                        if (e.type === 'elite') damage = 20;
-                        if (e.type === 'boss') damage = 40;
+                        // In tutorial, reduce damage significantly so player doesn't die instantly
+                        let damage = (gameState === 'TUTORIAL_STAGE') ? 0 : 10;
+                        
+                        if (gameState === 'PLAYING') {
+                            if (e.type === 'elite') damage = 20;
+                            if (e.type === 'boss') damage = 40;
+                        }
 
                         player.hp -= damage;
                         document.getElementById('hp-bar').style.width = `${Math.max(0, player.hp)}%`;
@@ -1500,7 +1851,14 @@
                         triggerDamageEffect();
                         
                         if (e.type === 'normal') {
-                            enemies.splice(i, 1);
+                            // Don't remove enemy in tutorial on collision, let them persist until shot
+                            if (gameState === 'PLAYING') enemies.splice(i, 1);
+                            else {
+                                // Bounce back in tutorial
+                                const angle = Math.atan2(e.y - player.y, e.x - player.x);
+                                e.x += Math.cos(angle) * 50;
+                                e.y += Math.sin(angle) * 50;
+                            }
                         } else {
                             const angle = Math.atan2(e.y - player.y, e.x - player.x);
                             e.x += Math.cos(angle) * 30;
@@ -1521,7 +1879,6 @@
             });
 
             // 3. RENDER LOOP (Z-SORTING)
-            // Kumpulkan semua objek yang perlu di-sort (Pemain, Musuh, Gedung, Tower)
             let renderList = [];
 
             // A. Gedung & Tower
@@ -1597,7 +1954,7 @@
                 if (gameState !== 'PLAYING') return;
                 const skill = skills[id];
                 if (skill.cooldown > 0) return;
-                AudioSys.skill();
+                AudioSys.skill(); // This might need differentiation if you have skill1.mp3 and skill2.mp3
                 if (id === 1) { 
                     skill.active = true; skill.cooldown = skill.maxCooldown;
                     setTimeout(() => skill.active = false, 5000);
@@ -1606,6 +1963,13 @@
                     enemies.forEach(e => {
                         score += e.value;
                         damageNumbers.push(new DamageText(e.x,e.y,"BOOM!","#FFF"));
+                        
+                        // Skill kill counts towards combo
+                        comboCount++;
+                        comboTimer = 180;
+                        streakCount++;
+                        checkCombo(comboCount);
+                        checkStreak(streakCount);
                     });
                     enemies = [];
                 }
@@ -1652,13 +2016,16 @@
 
         function showNotification(text, color) {
             const n = document.getElementById('notification');
-            n.innerText = text; n.className = `absolute top-24 left-1/2 transform -translate-x-1/2 bg-gray-900 border border-white px-6 py-2 rounded-full font-bold z-40 text-center ${color}`;
+            n.innerText = text; n.className = `absolute top-24 left-1/2 transform -translate-x-1/2 bg-blue-600/90 border border-blue-400 px-6 py-2 rounded-full text-white text-sm font-bold hidden transition-all z-40 text-center ${color}`;
             n.classList.remove('hidden');
             setTimeout(() => n.classList.add('hidden'), 2000);
         }
 
         function gameOver() {
-            gameState = 'GAMEOVER'; AudioSys.gameOver();
+            gameState = 'GAMEOVER'; 
+            AudioSys.gameOver(); // Play SFX
+            AudioSys.playMusic('victory'); // Play Victory/Result Music
+            
             document.getElementById('ui-hud').classList.add('hidden');
             document.getElementById('ui-gameover').classList.remove('hidden');
             
@@ -1690,13 +2057,20 @@
             document.getElementById('ui-gameover').classList.add('hidden');
             document.getElementById('ui-lobby').classList.remove('hidden');
             gameState = 'LOBBY';
+            AudioSys.playMusic('bgm'); // Kembali ke BGM Lobby
         }
 
         function showLeaderboard() {
             document.getElementById('ui-leaderboard').classList.remove('hidden');
             window.loadLeaderboardPage('first');
+            AudioSys.playMusic('victory'); // Musik saat lihat leaderboard
         }
-        function hideLeaderboard() { document.getElementById('ui-leaderboard').classList.add('hidden'); }
+        function hideLeaderboard() { 
+            document.getElementById('ui-leaderboard').classList.add('hidden'); 
+            if (gameState === 'LOBBY') {
+                AudioSys.playMusic('bgm'); // Kembali ke BGM jika dari lobby
+            }
+        }
         
         window.updateLeaderboardUI = (data, isDummy=false) => {  };
 
