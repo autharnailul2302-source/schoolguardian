@@ -359,19 +359,20 @@
         <!-- UI: DAMAGE OVERLAY -->
         <div id="damage-overlay" class="absolute inset-0 bg-red-600 pointer-events-none z-[45] opacity-0 transition-opacity duration-100 mix-blend-overlay"></div>
 
-        <!-- UI: COMBO OVERLAY -->
-        <div id="combo-overlay" class="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[65] flex flex-col items-center hidden">
-            <h1 id="combo-text" class="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-red-500 via-orange-500 to-yellow-500 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] ml-font tracking-widest text-center" style="text-shadow: 0 0 20px rgba(255,0,0,0.8); -webkit-text-stroke: 2px white;">
+        <!-- UI: COMBO OVERLAY (UPDATED: RESPONSIVE & CENTERED) -->
+        <div id="combo-overlay" class="absolute top-1/4 left-0 w-full flex flex-col items-center justify-center pointer-events-none z-[65] hidden -translate-y-1/2">
+            <h1 id="combo-text" class="text-4xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-red-500 via-orange-500 to-yellow-500 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] ml-font tracking-widest text-center px-4 leading-tight" style="text-shadow: 0 0 20px rgba(255,0,0,0.8); -webkit-text-stroke: 2px white;">
                 DOUBLE KILL
             </h1>
         </div>
 
-        <!-- UI: MOBA ANNOUNCEMENT OVERLAY -->
-        <div id="announcement-overlay" class="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[60] flex flex-col items-center hidden">
-            <h1 id="announcement-text" class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-yellow-400 to-yellow-600 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] ml-font tracking-widest text-center" style="text-shadow: 0 0 20px rgba(255,215,0,0.8);">
+        <!-- UI: MOBA ANNOUNCEMENT OVERLAY (UPDATED: RESPONSIVE & CENTERED) -->
+        <div id="announcement-overlay" class="absolute top-1/3 left-0 w-full flex flex-col items-center justify-center pointer-events-none z-[60] hidden -translate-y-1/2">
+            <!-- Font size diperkecil di mobile (text-3xl) agar tidak terpotong -->
+            <h1 id="announcement-text" class="text-3xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-yellow-400 to-yellow-600 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] ml-font tracking-widest text-center px-2 leading-tight" style="text-shadow: 0 0 20px rgba(255,215,0,0.8);">
                 ENEMY SLAIN
             </h1>
-            <div id="announcement-sub" class="text-white font-bold text-xl mt-2 tracking-[0.5em] bg-black/50 px-4 py-1 rounded border-t border-yellow-500">
+            <div id="announcement-sub" class="text-white font-bold text-sm md:text-xl mt-2 tracking-[0.2em] md:tracking-[0.5em] bg-black/50 px-4 py-1 rounded border-t border-yellow-500 text-center">
                 +50 GOLD
             </div>
         </div>
@@ -567,19 +568,36 @@
         </div>
 
         <!-- UI: GAME OVER -->
-        <div id="ui-gameover" class="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-[210] hidden">
-            <h1 class="text-5xl md:text-7xl text-red-600 font-bold mb-2 ml-font drop-shadow-[0_0_15px_rgba(220,38,38,0.8)]">SYSTEM DOWN</h1>
-            <div class="glass-panel p-6 w-80 text-center mb-8">
+        <div id="ui-gameover" class="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-[210] hidden px-4">
+            <!-- Responsive Font Size: text-4xl untuk Mobile, md:text-7xl untuk Desktop -->
+            <h1 class="text-4xl md:text-7xl text-red-600 font-bold mb-2 md:mb-4 ml-font drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] text-center leading-tight">SYSTEM DOWN</h1>
+            
+            <!-- Compact Glass Panel: Padding dan Margin dikurangi untuk Mobile -->
+            <div class="glass-panel p-4 md:p-6 w-full max-w-xs md:w-80 text-center mb-4 md:mb-8 border-t-2 border-red-600">
                 <!-- Added Player Name Display -->
-                <div class="text-gray-400 text-sm mb-1">AGENT NAME</div>
-                <div id="final-name" class="text-xl font-bold text-blue-400 mb-4 uppercase tracking-widest">SISWA</div>
+                <div class="text-gray-500 text-xs md:text-sm mb-1">AGENT NAME</div>
+                <div id="final-name" class="text-lg md:text-xl font-bold text-blue-400 mb-2 md:mb-4 uppercase tracking-widest truncate">SISWA</div>
                 
-                <div class="text-gray-400 text-sm mb-1">SCORE</div>
-                <div id="final-score" class="text-4xl font-bold text-yellow-400 mb-4">0</div>
-                <div class="text-gray-400 text-sm mb-1">RANK</div>
-                <div id="final-grade" class="text-2xl font-bold text-white">NOOB</div>
+                <div class="flex justify-between items-center mb-2 md:mb-4 px-2">
+                    <div class="text-center">
+                        <div class="text-gray-500 text-xs md:text-sm">SCORE</div>
+                        <div id="final-score" class="text-2xl md:text-4xl font-bold text-yellow-400">0</div>
+                    </div>
+                    <div class="h-8 w-px bg-gray-700"></div> <!-- Separator -->
+                    <div class="text-center">
+                        <div class="text-gray-500 text-xs md:text-sm">WAVE</div>
+                        <div id="final-wave-disp" class="text-2xl md:text-4xl font-bold text-red-400">1</div>
+                    </div>
+                </div>
+
+                <div class="text-gray-500 text-xs md:text-sm mb-1 mt-2">RANK</div>
+                <div id="final-grade" class="text-xl md:text-2xl font-bold text-white">NOOB</div>
             </div>
-            <button onclick="returnToLobby()" class="btn-gold px-8 py-3 rounded font-bold text-gray-900 ml-font">RESTART SYSTEM</button>
+            
+            <!-- Button Responsive -->
+            <button onclick="returnToLobby()" class="btn-gold px-6 py-2 md:px-8 md:py-3 rounded font-bold text-gray-900 ml-font text-sm md:text-base hover:scale-105 transition-transform shadow-[0_0_15px_rgba(234,179,8,0.4)]">
+                RESTART SYSTEM
+            </button>
         </div>
 
         <!-- UI: LEADERBOARD -->
@@ -621,84 +639,122 @@
 
     <!-- LOGIC -->
     <script>
-        // --- AUDIO SYSTEM ---
+        // --- AUDIO SYSTEM (UPDATED: SYNTHESIZER FALLBACK) ---
         const AudioSys = {
             ctx: null,
             bgm: null,
-            gameplay: null,
-            victory: null, // Tambahan untuk musik victory
-            welcome: null, // Tambahan untuk welcome sound
-            warning: null, // Tambahan untuk Enemy Approaching
-            sounds: {}, // Container for SFX
+            sounds: {},
+            
             init: function() {
                 window.AudioContext = window.AudioContext || window.webkitAudioContext;
                 if(!this.ctx) this.ctx = new AudioContext();
                 
-                // Initialize HTML Audio elements for music
-                if (!this.bgm) {
-                    this.bgm = new Audio('audio/bgm.mp3');
-                    this.bgm.loop = true;
-                    this.bgm.volume = 0.5;
-                }
-                if (!this.gameplay) {
-                    this.gameplay = new Audio('audio/gimplay.mp3');
-                    this.gameplay.loop = true;
-                    this.gameplay.volume = 0.4;
-                }
-                // Inisialisasi musik Victory
-                if (!this.victory) {
-                    this.victory = new Audio('audio/victory.mp3');
-                    this.victory.loop = true;
-                    this.victory.volume = 0.5;
-                }
-                // Inisialisasi Welcome Sound
-                if (!this.welcome) {
-                    this.welcome = new Audio('audio/welcome.mp3');
-                    this.welcome.volume = 1.0; // Volume maksimal agar terdengar jelas
-                }
-                // Inisialisasi Warning Sound (Enemy Approaching)
-                if (!this.warning) {
-                    this.warning = new Audio('audio/peringatanmusuhdatang.mp3');
-                    this.warning.volume = 1.0; 
-                }
-
-                // SFX Loading
-                const sfxFiles = {
+                // Coba muat file, jika gagal nanti akan otomatis ke Synth
+                const filePaths = {
                     'shoot': 'audio/shoot.mp3',
                     'hit': 'audio/hit.mp3',
-                    'skill1': 'audio/skill1.mp3', 
+                    'skill1': 'audio/skill1.mp3',
                     'skill2': 'audio/skill2.mp3',
-                    'slain': 'audio/enemy_slain.mp3', // Generic legacy
-                    'double': 'audio/double_kill.mp3',
-                    'triple': 'audio/triple_kill.mp3',
-                    'maniac': 'audio/maniac.mp3',
-                    'savage': 'audio/savage.mp3',
+                    'slain': 'audio/enemy_slain.mp3',
                     'legendary': 'audio/legendary.mp3',
+                    'victory': 'audio/victory.mp3',
                     'defeat': 'audio/defeat.mp3',
-                    // BARU: Suara Kill Spesifik
-                    'you_slain': 'audio/youhaveslainenemy.mp3',
-                    'enemy_slain_announce': 'audio/enemyhasbeslain.mp3'
+                    'welcome': 'audio/welcome.mp3',
+                    'warning': 'audio/peringatanmusuhdatang.mp3',
+                    'you_slain': 'audio/youhaveslainenemy.mp3'
                 };
 
-                for (const [key, path] of Object.entries(sfxFiles)) {
+                for (const [key, path] of Object.entries(filePaths)) {
                     this.sounds[key] = new Audio(path);
+                    this.sounds[key].volume = 0.5;
                 }
             },
-            playMusic: function(type) {
-                // Stop all first
-                if (this.bgm) { this.bgm.pause(); this.bgm.currentTime = 0; }
-                if (this.gameplay) { this.gameplay.pause(); this.gameplay.currentTime = 0; }
-                if (this.victory) { this.victory.pause(); this.victory.currentTime = 0; }
+            
+            // Core Synth Function: Menghasilkan suara jika file MP3 tidak ada
+            playSynth: function(type) {
+                if (!this.ctx) return;
+                
+                // Pastikan context jalan (browser memblokir audio sebelum user interaksi)
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
 
-                // Play selected
-                if (type === 'bgm' && this.bgm) {
-                    this.bgm.play().catch(e => console.log("Audio play failed:", e));
-                } else if (type === 'gameplay' && this.gameplay) {
-                    this.gameplay.play().catch(e => console.log("Audio play failed:", e));
-                } else if (type === 'victory' && this.victory) {
-                    this.victory.play().catch(e => console.log("Audio play failed:", e));
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                // PRESET SUARA
+                switch(type) {
+                    case 'shoot':
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(800, t);
+                        osc.frequency.exponentialRampToValueAtTime(100, t + 0.15);
+                        gain.gain.setValueAtTime(0.1, t);
+                        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+                        osc.start(t); osc.stop(t + 0.15);
+                        break;
+                        
+                    case 'hit': // Suara ledakan kecil
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(150, t);
+                        osc.frequency.exponentialRampToValueAtTime(0.01, t + 0.1);
+                        gain.gain.setValueAtTime(0.2, t);
+                        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+                        osc.start(t); osc.stop(t + 0.1);
+                        break;
+
+                    case 'skill1': // Power up sound
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(200, t);
+                        osc.frequency.linearRampToValueAtTime(800, t + 0.3);
+                        gain.gain.setValueAtTime(0.3, t);
+                        gain.gain.linearRampToValueAtTime(0, t + 0.3);
+                        osc.start(t); osc.stop(t + 0.3);
+                        break;
+
+                    case 'skill2': // Explosion big
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(100, t);
+                        osc.frequency.exponentialRampToValueAtTime(10, t + 0.5);
+                        gain.gain.setValueAtTime(0.5, t);
+                        gain.gain.exponentialRampToValueAtTime(0, t + 0.5);
+                        osc.start(t); osc.stop(t + 0.5);
+                        break;
+                        
+                    case 'ui': // Klik tombol
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(1200, t);
+                        gain.gain.setValueAtTime(0.1, t);
+                        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+                        osc.start(t); osc.stop(t + 0.1);
+                        break;
+                        
+                    case 'slain': // Melodic kill
+                    case 'you_slain':
+                        // Simple Arpeggio
+                        this.playTone(400, 'square', 0.1, 0.1);
+                        setTimeout(() => this.playTone(600, 'square', 0.2, 0.1), 100);
+                        break;
+                        
+                    case 'victory':
+                        // Victory Fanfare
+                        [523, 659, 783, 1046, 783, 1046].forEach((f, i) => {
+                            setTimeout(() => this.playTone(f, 'square', 0.2, 0.2), i * 200);
+                        });
+                        break;
+                        
+                    case 'gameover':
+                        [300, 250, 200, 150].forEach((f, i) => {
+                            setTimeout(() => this.playTone(f, 'sawtooth', 0.4, 0.3), i * 300);
+                        });
+                        break;
                 }
             },
+
+            // Helper untuk nada tunggal
             playTone: function(freq, type, duration, vol = 0.1) {
                 if (!this.ctx) return;
                 const osc = this.ctx.createOscillator();
@@ -712,76 +768,60 @@
                 osc.start();
                 osc.stop(this.ctx.currentTime + duration);
             },
+
+            // Universal Player: Coba file dulu, kalau gagal (catch) pakai Synth
             playSFX: function(name) {
                 if (this.sounds[name]) {
-                    // Clone node allows overlapping sounds (e.g. rapid fire)
                     const s = this.sounds[name].cloneNode();
-                    s.volume = 0.6;
-                    s.play().catch(e => {
-                        // Fallback to synth if file fails or browser blocks
-                        if(name === 'shoot') this.playTone(400, 'square', 0.1, 0.05);
-                        else if(name === 'hit') this.playTone(100, 'sawtooth', 0.1, 0.05);
-                    });
+                    s.volume = 0.5;
+                    // Try to play file
+                    const promise = s.play();
+                    
+                    if (promise !== undefined) {
+                        promise.catch(error => {
+                            // File not found or blocked? Use Synth!
+                            // console.log("Audio file fallback:", name);
+                            this.playSynth(name);
+                        });
+                    }
                 } else {
-                    // Fallback generic tones if specific sound not mapped or loaded
-                    if(name === 'shoot') this.playTone(400, 'square', 0.1, 0.05);
-                    else if(name === 'hit') this.playTone(100, 'sawtooth', 0.1, 0.05);
+                    // No file mapping? Use Synth directly
+                    this.playSynth(name);
                 }
             },
+
+            // Wrapper methods
             shoot: function() { this.playSFX('shoot'); },
             hit: function() { this.playSFX('hit'); },
             skill: function() { this.playSFX('skill1'); },
-            powerup: function() { this.playTone(600, 'sine', 0.1, 0.1); setTimeout(() => this.playTone(900, 'sine', 0.2, 0.1), 100); },
-            correct: function() { this.playTone(1000, 'sine', 0.1, 0.1); },
-            wrong: function() { this.playTone(200, 'sawtooth', 0.3, 0.1); },
-            gameOver: function() { 
-                this.playTone(100, 'sawtooth', 1.0, 0.2); 
-                this.playSFX('defeat');
-            },
-            slain: function() {
-                this.playSFX('slain');
-            },
-            // BARU: Method untuk audio spesifik
-            youSlain: function() {
-                this.playSFX('you_slain');
-            },
-            enemySlain: function() {
-                this.playSFX('enemy_slain_announce');
-            },
-            bossSlain: function() {
-                this.playSFX('legendary'); // Boss kill sounds epic
-            },
-            playWelcome: function() {
-                if (this.welcome) {
-                    this.welcome.currentTime = 0;
-                    this.welcome.play().catch(e => console.log("Welcome sound failed:", e));
+            powerup: function() { this.playSynth('skill1'); }, 
+            correct: function() { this.playTone(1000, 'sine', 0.2, 0.2); },
+            wrong: function() { this.playTone(200, 'sawtooth', 0.4, 0.2); },
+            gameOver: function() { this.playSynth('gameover'); },
+            slain: function() { this.playSFX('slain'); },
+            youSlain: function() { this.playSFX('you_slain'); },
+            enemySlain: function() { this.playSFX('slain'); },
+            bossSlain: function() { this.playSFX('legendary'); },
+            playWelcome: function() { this.playSFX('welcome'); },
+            playWarning: function() { this.playSFX('warning'); },
+            uiClick: function() { this.playSynth('ui'); },
+            
+            playMusic: function(type) {
+                // Music files are heavy, if they fail, we just stay silent to avoid annoying constant beeping
+                if (this.sounds[type]) {
+                    this.sounds[type].loop = true;
+                    this.sounds[type].play().catch(() => {});
                 }
-            },
-            playWarning: function() {
-                if (this.warning) {
-                    this.warning.currentTime = 0;
-                    this.warning.play().catch(e => console.log("Warning sound failed:", e));
-                }
-            },
-            // Added UI click sound
-            uiClick: function() {
-                // Short high pitch beep for UI interaction
-                this.playTone(1200, 'sine', 0.05, 0.05);
             }
         };
 
-        // Add global click listener for UI sounds
+        // Add global click listener to unlock AudioContext
         document.addEventListener('click', (e) => {
-            // Check if element is clickable (button, input, or specific classes)
-            if (e.target.tagName === 'BUTTON' || 
-                e.target.closest('button') || 
-                e.target.classList.contains('char-card') ||
-                e.target.classList.contains('quiz-option')) {
-                
-                // Initialize if not ready (for the very first click)
-                if (!AudioSys.ctx) AudioSys.init();
-                if (AudioSys.ctx && AudioSys.ctx.state === 'suspended') AudioSys.ctx.resume();
-                
+            if (!AudioSys.ctx) AudioSys.init();
+            if (AudioSys.ctx && AudioSys.ctx.state === 'suspended') AudioSys.ctx.resume();
+            
+            // Play UI sound for clickable elements
+            if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.classList.contains('char-card')) {
                 AudioSys.uiClick();
             }
         });
@@ -821,6 +861,9 @@
 
         async function initExperience() {
             AudioSys.init();
+            // Unlock audio context explicitly on start button
+            if (AudioSys.ctx && AudioSys.ctx.state === 'suspended') AudioSys.ctx.resume();
+            
             AudioSys.playMusic('bgm');
             
             // Panggil fungsi enforce landscape
@@ -844,22 +887,7 @@
             if (document.visibilityState === 'visible') {
                 // Saat kembali ke aplikasi, coba restore landscape/fullscreen
                 enforceLandscape();
-                
-                // Resume musik jika sedang dalam game atau lobby
-                if(AudioSys.bgm && AudioSys.bgm.paused && gameState === 'LOBBY') {
-                    AudioSys.bgm.play().catch(e=>console.log(e));
-                }
-                if(AudioSys.gameplay && AudioSys.gameplay.paused && gameState === 'PLAYING') {
-                    AudioSys.gameplay.play().catch(e=>console.log(e));
-                }
-                if(AudioSys.victory && AudioSys.victory.paused && (gameState === 'GAMEOVER' || !document.getElementById('ui-leaderboard').classList.contains('hidden'))) {
-                    AudioSys.victory.play().catch(e=>console.log(e));
-                }
-            } else {
-               // Pause musik saat aplikasi di background
-               if(AudioSys.bgm) AudioSys.bgm.pause();
-               if(AudioSys.gameplay) AudioSys.gameplay.pause();
-               if(AudioSys.victory) AudioSys.victory.pause();
+                if (AudioSys.ctx && AudioSys.ctx.state === 'suspended') AudioSys.ctx.resume();
             }
         });
 
@@ -870,6 +898,7 @@
             if (!document.fullscreenElement) {
                 enforceLandscape();
             }
+            if (AudioSys.ctx && AudioSys.ctx.state === 'suspended') AudioSys.ctx.resume();
         }, {passive: true}); // passive true agar tidak blocking scroll default jika ada
 
         function startLoadingAssets() {
@@ -1229,6 +1258,12 @@
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle);
 
+                // --- ANIMASI BERNAFAS (HERO) ---
+                // Menggunakan scale uniform (X & Y) dari tengah untuk efek dada naik-turun halus
+                // Sinus wave membuat gerakan mulus
+                const breath = 1 + Math.sin(frames * 0.08) * 0.02; 
+                ctx.scale(breath, breath);
+
                 // Shield visual
                 if (activePowerUp === 'SHIELD') {
                     ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI*2);
@@ -1371,11 +1406,41 @@
                 else if (this.type === 'elite') img = eliteImg;
                 else if (this.type === 'boss') img = bossImg;
 
+                // --- ANIMASI BERNAFAS (MONSTER) ---
+                // Menggunakan random phase berdasarkan posisi (this.x + this.y) agar tidak semua monster bergerak serentak
+                const phase = (this.x + this.y) * 0.05;
+                const breathSpeed = 0.12;
+                
+                // Scale Y (Tinggi) naik turun, Scale X (Lebar) sebaliknya (Squash & Stretch)
+                const scaleY = 1 + Math.sin(frames * breathSpeed + phase) * 0.05; 
+                const scaleX = 1 + Math.cos(frames * breathSpeed + phase) * 0.02;
+
+                ctx.save();
+                
+                // LOGIKA NAPAK TANAH:
+                // 1. Tentukan ukuran visual monster
+                const visualSize = this.radius * 2.5;
+                
+                // 2. Tentukan titik kaki (Pivot Point)
+                // Default gambar digambar centered di this.y, jadi kakinya ada di this.y + visualSize/2
+                const anchorX = this.x;
+                const anchorY = this.y + (visualSize / 2);
+
+                // 3. Pindahkan konteks ke kaki monster
+                ctx.translate(anchorX, anchorY);
+                
+                // 4. Lakukan Scaling di titik kaki
+                ctx.scale(scaleX, scaleY);
+
                 if (img && img.complete && img.naturalWidth !== 0) {
-                    const size = this.radius * 2.5; 
-                    ctx.drawImage(img, this.x - size/2, this.y - size/2, size, size);
+                    // 5. Gambar Image "ke atas" dari titik kaki (-visualSize)
+                    // X digeser -visualSize/2 agar tetap center horizontal
+                    ctx.drawImage(img, -visualSize/2, -visualSize, visualSize, visualSize);
                 } else {
-                    ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+                    // Fallback jika gambar error
+                    ctx.beginPath(); 
+                    // Gambar lingkaran dengan offset ke atas agar kaki tetap di (0,0) local
+                    ctx.arc(0, -visualSize/2, this.radius, 0, Math.PI*2);
                     ctx.fillStyle = this.color; ctx.fill();
                     
                     if (this.type !== 'normal') {
@@ -1384,6 +1449,8 @@
                         ctx.shadowBlur = 0;
                     }
                 }
+                
+                ctx.restore(); // Restore agar HP Bar tidak ikut scale/bernafas
 
                 const barWidth = this.radius * 2.5;
                 const hpPct = this.hp / this.maxHp;
@@ -1659,7 +1726,7 @@
 
             if (text) {
                 showComboText(text);
-                if (soundKey) AudioSys.playSFX(soundKey);
+                // if (soundKey) AudioSys.playSFX(soundKey);
             }
         }
 
@@ -1736,11 +1803,20 @@
                 // Using simplified CSS centering for now, but logical update could be here
                 
                 if (hasMoved) {
+                    tutorialStep = 1.5; // STATE LOCKED: Mencegah spawn berulang-ulang
                     setTimeout(() => {
                         tutorialStep = 2;
+                        
                         // Spawn dummy enemy near player but slightly away
-                        const dummyX = player.x > canvas.width/2 ? player.x - 150 : player.x + 150;
-                        const dummyY = player.y;
+                        let dummyX = player.x > canvas.width/2 ? player.x - 150 : player.x + 150;
+                        // Clamp X agar tidak keluar layar
+                        dummyX = Math.max(50, Math.min(canvas.width - 50, dummyX));
+                        
+                        // FIX VISIBILITY: Paksa spawn di area depan (bawah tower) 
+                        // agar tidak tertutup tower jika player lari ke belakang
+                        const safeY = (canvas.height / 2) + 100;
+                        const dummyY = Math.max(player.y, safeY);
+
                         enemies.push(new Enemy('normal', dummyX, dummyY));
                     }, 1000);
                 }
@@ -1954,7 +2030,9 @@
                 if (gameState !== 'PLAYING') return;
                 const skill = skills[id];
                 if (skill.cooldown > 0) return;
-                AudioSys.skill(); // This might need differentiation if you have skill1.mp3 and skill2.mp3
+                if (id === 1) AudioSys.skill(); 
+                else AudioSys.playSynth('skill2');
+
                 if (id === 1) { 
                     skill.active = true; skill.cooldown = skill.maxCooldown;
                     setTimeout(() => skill.active = false, 5000);
@@ -2024,13 +2102,18 @@
         function gameOver() {
             gameState = 'GAMEOVER'; 
             AudioSys.gameOver(); // Play SFX
-            AudioSys.playMusic('victory'); // Play Victory/Result Music
+            // AudioSys.playMusic('victory'); 
             
             document.getElementById('ui-hud').classList.add('hidden');
             document.getElementById('ui-gameover').classList.remove('hidden');
             
             document.getElementById('final-name').innerText = playerName; 
             
+            // Tampilkan Wave Terakhir (dihitung dari difficultyMultiplier)
+            const finalWave = Math.floor(difficultyMultiplier);
+            const waveEl = document.getElementById('final-wave-disp');
+            if(waveEl) waveEl.innerText = finalWave;
+
             const safeScoreDisplay = (typeof score === 'number' && !isNaN(score)) ? Math.floor(score) : 0;
             document.getElementById('final-score').innerText = safeScoreDisplay;     
             
@@ -2048,7 +2131,7 @@
 
             const gradeEl = document.getElementById('final-grade');
             gradeEl.innerText = g;
-            gradeEl.className = `text-4xl font-black ${colorClass} drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] ml-font tracking-widest`;
+            gradeEl.className = `text-xl md:text-3xl font-black ${colorClass} drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] ml-font tracking-widest`;
             
             if(window.submitScoreToDB) window.submitScoreToDB(playerName, score, playerGender);
         }
@@ -2057,18 +2140,18 @@
             document.getElementById('ui-gameover').classList.add('hidden');
             document.getElementById('ui-lobby').classList.remove('hidden');
             gameState = 'LOBBY';
-            AudioSys.playMusic('bgm'); // Kembali ke BGM Lobby
+            // AudioSys.playMusic('bgm'); 
         }
 
         function showLeaderboard() {
             document.getElementById('ui-leaderboard').classList.remove('hidden');
             window.loadLeaderboardPage('first');
-            AudioSys.playMusic('victory'); // Musik saat lihat leaderboard
+            AudioSys.playSynth('victory'); 
         }
         function hideLeaderboard() { 
             document.getElementById('ui-leaderboard').classList.add('hidden'); 
             if (gameState === 'LOBBY') {
-                AudioSys.playMusic('bgm'); // Kembali ke BGM jika dari lobby
+                // AudioSys.playMusic('bgm'); 
             }
         }
         
