@@ -2,7 +2,10 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Viewport Fix untuk iPhone (mencegah zoom & bounce) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>School Guardians - ICT Defense</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,7 +18,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // Menambahkan 'startAfter' dan 'getDocs' untuk pagination
         import { getFirestore, collection, addDoc, query, orderBy, limit, startAfter, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- KONFIGURASI FIREBASE ---
@@ -37,7 +39,7 @@
         let currentUser = null;
 
         // Variabel Pagination
-        let lastVisibleSnapshots = []; // Stack untuk menyimpan snapshot terakhir tiap halaman
+        let lastVisibleSnapshots = []; 
         let currentPage = 1;
         const PAGE_SIZE = 10;
 
@@ -80,8 +82,6 @@
 
         window.submitScoreToDB = async (name, score, gender) => {
             if (!db || !currentUser || !leaderboardRef) return;
-            
-            // Validasi: Pastikan score adalah angka valid, jika tidak ubah jadi 0
             const safeScore = (typeof score === 'number' && isFinite(score)) ? Math.floor(score) : 0;
             const safeName = name ? name : "Siswa";
 
@@ -92,21 +92,18 @@
                     gender: gender, 
                     timestamp: serverTimestamp()
                 });
-                // Refresh halaman pertama setelah submit
                 loadLeaderboardPage('first');
             } catch (e) {
                 console.error("Gagal upload skor:", e);
             }
         };
 
-        // --- SISTEM PAGINATION ---
         window.loadLeaderboardPage = async (direction) => {
             if (!db || !leaderboardRef) return;
 
             const tbody = document.getElementById('leaderboard-body');
             tbody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">Memuat data...</td></tr>';
             
-            // Atur tombol state
             const btnPrev = document.getElementById('btn-prev');
             const btnNext = document.getElementById('btn-next');
             const pageIndicator = document.getElementById('page-indicator');
@@ -121,7 +118,7 @@
                 } 
                 else if (direction === 'next') {
                     const lastVisible = lastVisibleSnapshots[currentPage - 1];
-                    if (!lastVisible) return; // Safety check
+                    if (!lastVisible) return; 
                     q = query(leaderboardRef, orderBy("score", "desc"), startAfter(lastVisible), limit(PAGE_SIZE));
                     currentPage++;
                 } 
@@ -132,7 +129,6 @@
                     if (currentPage === 1) {
                         q = query(leaderboardRef, orderBy("score", "desc"), limit(PAGE_SIZE));
                     } else {
-                        // Ambil snapshot akhir dari halaman sebelumnya
                         const prevLastVisible = lastVisibleSnapshots[currentPage - 2];
                         q = query(leaderboardRef, orderBy("score", "desc"), startAfter(prevLastVisible), limit(PAGE_SIZE));
                     }
@@ -140,13 +136,11 @@
 
                 const querySnapshot = await getDocs(q);
                 
-                // Simpan snapshot terakhir halaman ini untuk navigasi 'Next'
                 if (!querySnapshot.empty) {
                     const lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
                     lastVisibleSnapshots[currentPage - 1] = lastDoc;
                 }
 
-                // Render Data
                 tbody.innerHTML = '';
                 if (querySnapshot.empty) {
                     tbody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">Tidak ada data.</td></tr>';
@@ -155,7 +149,6 @@
                     const safePage = Number(currentPage) || 1;
                     const rankOffset = (safePage - 1) * safeSize;
 
-                    // FIX: Gunakan .docs.forEach untuk menjamin index tersedia
                     querySnapshot.docs.forEach((doc, index) => {
                         const data = doc.data();
                         
@@ -172,7 +165,7 @@
                         if (Number.isFinite(calcRank)) {
                             finalRank = calcRank;
                         } else {
-                            finalRank = index + 1; // Fallback pasti angka
+                            finalRank = index + 1; 
                         }
 
                         const finalName = (data && data.name) ? String(data.name).substring(0, 15) : "Siswa";
@@ -188,7 +181,6 @@
                     });
                 }
 
-                // Update UI Controls
                 pageIndicator.innerText = `Halaman ${currentPage}`;
                 btnPrev.disabled = currentPage === 1;
                 btnNext.disabled = querySnapshot.docs.length < PAGE_SIZE; 
@@ -212,6 +204,10 @@
             background-color: #1a1a1a; 
             color: white;
             touch-action: none;
+            /* Fix iOS height issues */
+            height: 100vh;
+            height: 100dvh; 
+            width: 100vw;
         }
         
         h1, h2, h3, .ml-font {
@@ -339,9 +335,47 @@
             0%, 100% { transform: translate(-50%, 0); }
             50% { transform: translate(-50%, -10px); }
         }
+
+        /* --- IOS ORIENTATION LOCK OVERLAY --- */
+        #orientation-lock {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #0f172a;
+            z-index: 9999;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+        }
+        
+        #orientation-lock i {
+            font-size: 4rem;
+            color: #FCD34D;
+            animation: rotate-phone 2s infinite ease-in-out;
+            margin-bottom: 20px;
+        }
+
+        @keyframes rotate-phone {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+        }
+
+        /* Show overlay ONLY on portrait screens (Mobile) */
+        @media screen and (orientation: portrait) and (max-width: 1024px) {
+            #orientation-lock { display: flex; }
+        }
     </style>
 </head>
 <body class="bg-gray-900 w-full h-screen select-none overflow-hidden m-0 p-0">
+
+    <!-- IOS ROTATION WARNING -->
+    <div id="orientation-lock">
+        <i class="fas fa-mobile-alt"></i>
+        <h2 class="text-2xl font-bold font-sans">PUTAR PERANGKAT</h2>
+        <p class="text-gray-400 mt-2 text-sm px-8">Game ini wajib dimainkan dalam mode Landscape (Miring).</p>
+    </div>
 
     <!-- GAME CONTAINER -->
     <div id="game-container" class="relative w-full h-full overflow-hidden bg-black">
@@ -1283,12 +1317,17 @@
         // --- RESIZE ---
         function resize() {
             const container = document.getElementById('game-container');
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
+            // FIX: Gunakan innerHeight langsung untuk iPhone/Safari
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
             generateMap(); 
             if(player && frames < 10) { player.x = canvas.width/2; player.y = canvas.height/2; }
         }
         window.addEventListener('resize', resize);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resize, 200); // Delay sedikit agar orientasi selesai
+        });
 
         // --- CLASSES ---
         class Player {
@@ -1446,7 +1485,8 @@
                     this.color = '#EF4444'; 
                     this.hp = 3 + Math.floor(difficultyMultiplier);
                     this.maxHp = this.hp;
-                    this.speed = (1.5 + difficultyMultiplier * 0.1);
+                    // FIX: Kecepatan awal dikurangi dari 1.5 jadi 1.0 agar lebih mudah
+                    this.speed = (1.0 + difficultyMultiplier * 0.05);
                     this.value = 10;
                 }
             }
@@ -1737,7 +1777,7 @@
 
         function shoot() {
             const angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
-            const speed = 12;
+            const speed = 15; // Increased bullet speed (was 12)
             
             bullets.push(new Bullet(player.x, player.y, {x:Math.cos(angle)*speed, y:Math.sin(angle)*speed}));
             
@@ -2059,7 +2099,8 @@
             updateSkills();
             drawJoystick();
 
-            if (isMouseDown && frames % 10 === 0) shoot();
+            // FIX: Fire rate ditingkatkan (dari % 10 jadi % 8) agar lebih cepat
+            if (isMouseDown && frames % 8 === 0) shoot();
         }
 
         // --- JOYSTICK & CONTROLS ---
