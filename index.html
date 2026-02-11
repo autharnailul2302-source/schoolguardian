@@ -1424,7 +1424,9 @@
             constructor(x, y, velocity, isSpecial=false) {
                 this.x = x; this.y = y; this.velocity = velocity;
                 this.color = isSpecial ? '#10B981' : '#FCD34D';
-                this.life = 60;
+                // FIX: Meningkatkan durasi hidup peluru (Range) dari 60 ke 120 frame (~2 detik)
+                // Ini memastikan peluru bisa mencapai ujung layar sebelum hilang
+                this.life = 120; 
                 this.isSpecial = isSpecial;
                 this.radius = 4;
             }
